@@ -1,3 +1,8 @@
+/**
+ * 评测指标计算：pass@1、Wilson 置信区间、pass^k、单位成功成本、
+ * p95 延迟与升级率。全部为纯函数，便于测试与复现。
+ */
+/** 单次尝试的原始指标。 */
 export interface AttemptMetrics {
   pass: boolean;
   costUsd: number;
@@ -5,11 +10,13 @@ export interface AttemptMetrics {
   escalated: boolean;
 }
 
+/** 单个用例的多次尝试结果。 */
 export interface CaseOutcome {
   caseId: string;
   attempts: AttemptMetrics[];
 }
 
+/** 聚合后的评测指标；字段名与证据卡保持一致。 */
 export interface EvalMetrics {
   n: number;
   totalAttempts: number;
@@ -23,7 +30,10 @@ export interface EvalMetrics {
   knownFailures: string[];
 }
 
-/** Wilson score interval, 95%. */
+/**
+ * Wilson 得分区间（默认 95%），比正态近似更适合小样本与极端比例。
+ * 返回 [下界, 上界]，n=0 时返回 [0, 0]。
+ */
 export function wilsonInterval(successes: number, n: number, z = 1.959963984540054): [number, number] {
   if (n === 0) return [0, 0];
   const phat = successes / n;
@@ -36,6 +46,7 @@ export function wilsonInterval(successes: number, n: number, z = 1.9599639845400
   ];
 }
 
+/** 计算分位数（如 p95）；空数组返回 0。 */
 function percentile(values: readonly number[], ratio: number): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -43,6 +54,7 @@ function percentile(values: readonly number[], ratio: number): number {
   return sorted[Math.max(0, index)] ?? 0;
 }
 
+/** 汇总所有用例的尝试，计算五项核心指标与已知失败列表。 */
 export function computeMetrics(cases: readonly CaseOutcome[]): EvalMetrics {
   const attempts = cases.flatMap((entry) => entry.attempts);
   const totalAttempts = attempts.length;
@@ -60,6 +72,7 @@ export function computeMetrics(cases: readonly CaseOutcome[]): EvalMetrics {
     successes,
     'pass@1': totalAttempts === 0 ? 0 : successes / totalAttempts,
     passAt1Ci95: wilsonInterval(successes, totalAttempts),
+    // pass^k：k 次尝试全部通过的用例占比。
     'pass^k': cases.length === 0 ? 0 : allPassCases / cases.length,
     costPerSuccess: successes === 0 ? 0 : totalCost / successes,
     p95LatencyMs: percentile(latencies, 0.95),
