@@ -1,3 +1,6 @@
+/**
+ * 执行器单元测试：固定失败映射、权限天花板、重试与过滤链协作。
+ */
 import { describe, expect, it } from 'vitest';
 import { createDefaultFilters } from '../../src/filters/index.js';
 import { createRunContext } from '../../src/runtime/context.js';
@@ -11,6 +14,7 @@ import {
 import { createTracer } from '../../src/trace/tracer.js';
 import { registeredSkill, toolCall } from '../helpers.js';
 
+/** 构造 certified 技能与运行上下文，默认拥有读/写/执行/网络能力。 */
 function setup(overrides: Parameters<typeof registeredSkill>[0] = {}) {
   const skill = registeredSkill(
     {
@@ -53,9 +57,7 @@ describe('failure mapping', () => {
 
 describe('executor', () => {
   it('executes a declared command and traces the result before returning', async () => {
-    const { tracer, context } = setup({}, {
-      Bash: async () => ({ status: 'paid' }),
-    });
+    const { tracer, context } = setup();
     const executor = createExecutor({ filters: [], handlers: { Bash: async () => ({ status: 'paid' }) } });
     const result = await executor.execute(
       toolCall({
