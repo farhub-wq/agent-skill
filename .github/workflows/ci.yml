@@ -1,3 +1,4 @@
+# CI：在 Linux 与 Windows 上执行类型检查、构建、全量测试与 CLI 冒烟。
 name: CI
 
 on:
@@ -5,11 +6,13 @@ on:
     branches: [main]
   pull_request:
 
+# 只读权限即可，CI 不写入仓库。
 permissions:
   contents: read
 
 jobs:
   test:
+    # 两个平台都跑，避免路径与子进程差异被漏掉；任一失败不影响另一平台报告。
     strategy:
       fail-fast: false
       matrix:
@@ -24,6 +27,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
 
+      # 锁定依赖后依次做类型检查、构建、测试。
       - run: npm ci
 
       - run: npm run typecheck
@@ -32,9 +36,11 @@ jobs:
 
       - run: npm test
 
+      # 冒烟 1：示例技能应通过 install 级准入（退出码 0）。
       - name: CLI smoke - example skill passes install gate
         run: node dist/cli/index.js verify examples/invoice-reconcile --gate install
 
+      # 冒烟 2：含宿主预处理命令的恶意样本必须被拒，退出码必须为 2。
       - name: CLI smoke - malicious fixture is rejected with exit code 2
         shell: bash
         run: |
@@ -47,5 +53,6 @@ jobs:
             exit 1
           fi
 
+      # 冒烟 3：独立运行时能执行示例技能并在沙箱内产出结果。
       - name: CLI smoke - standalone run of the example skill
         run: node dist/cli/index.js run examples/invoice-reconcile --input examples/invoice-reconcile/data/input.json

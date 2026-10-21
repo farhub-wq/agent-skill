@@ -1,3 +1,7 @@
+/**
+ * inspect 命令：只读展示清单、分级、权限上限与清单自身校验问题。
+ * 不执行准入，也不修改任何文件。
+ */
 import { allowedToolsOf, loadSkillSource } from '../../manifest/parse.js';
 import { validateManifest } from '../../manifest/validate.js';
 import { permissionCeiling, tierForTrust } from '../../admission/tier.js';
@@ -8,8 +12,10 @@ export interface InspectOptions {
   json: boolean;
 }
 
+/** 汇总清单信息，并根据 --json 选择结构化或人类可读输出。 */
 export async function inspectCommand(options: InspectOptions): Promise<number> {
   const source = await loadSkillSource(options.dir);
+  // 信任级别决定权限上限，inspect 只展示，不做拦截。
   const tier = tierForTrust(source.manifest.trust);
   const summary = {
     name: source.manifest.name,

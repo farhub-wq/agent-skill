@@ -1,6 +1,9 @@
+// 示例技能脚本：对账发票与付款记录，输出 paid/partial/unpaid/overpaid 状态。
+// 输入优先从 stdin 读取 JSON，没有 stdin 时回退到 data/input.json。
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+/** 读取输入：stdin 有内容时优先使用，否则读当前目录的 data/input.json。 */
 async function readInput() {
   const chunks = [];
   for await (const chunk of process.stdin) chunks.push(chunk);
@@ -9,6 +12,11 @@ async function readInput() {
   return JSON.parse(readFileSync(path.join(process.cwd(), 'data', 'input.json'), 'utf8'));
 }
 
+/**
+ * 对账核心逻辑：
+ * 1. 校验发票字段；2. 逐笔校验付款并去重累加；
+ * 3. 按差额（保留两位小数）判定状态。
+ */
 function reconcile(document) {
   const invoice = document?.invoice;
   const payments = document?.payments;
@@ -23,6 +31,7 @@ function reconcile(document) {
     return { error: 'invalid-payments' };
   }
 
+  // 用 Set 检测重复付款 id，避免同一笔款被计两次。
   const seen = new Set();
   let total = 0;
   for (const payment of payments) {
@@ -43,6 +52,7 @@ function reconcile(document) {
     total += payment.amount;
   }
 
+  // 金额以分为单位四舍五入，容差 0.005 用于吸收浮点误差。
   const round = (value) => Math.round(value * 100) / 100;
   const outstanding = round(invoice.amount - total);
   let status;
@@ -57,5 +67,6 @@ function reconcile(document) {
   return { invoiceId: invoice.id, status, outstanding };
 }
 
+// 入口：读取输入后把结果以单行 JSON 写到 stdout，供评测器解析。
 const document = await readInput();
 process.stdout.write(`${JSON.stringify(reconcile(document))}\n`);

@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/**
+ * CLI 入口：解析子命令与参数，分发给 src/cli/commands 下的实现。
+ * 帮助信息以三个价值陈述开头，与 README 保持一致。
+ */
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import type { GateMode } from '../admission/gate.js';
@@ -32,10 +36,12 @@ Commands:
 Sandbox is process-level and is not a security boundary.
 `;
 
+/** 取第二个位置参数作为技能目录，未提供时使用 fallback。 */
 function parseDir(positionals: string[], fallback?: string): string | undefined {
   return positionals[1] ?? fallback;
 }
 
+/** CLI 主函数：返回退出码而不直接退出，便于测试与嵌入。 */
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   let parsed;
   try {
@@ -54,6 +60,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       },
     });
   } catch (error) {
+    // 参数解析失败：打印原因与帮助，返回用法错误码。
     console.error((error as Error).message);
     console.error(HELP);
     return EXIT.usage;
@@ -62,11 +69,13 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const { values, positionals } = parsed;
   const command = positionals[0];
 
+  // 显式 --help 返回 0；完全没给命令则打印帮助并返回用法错误。
   if (values.help === true || command === undefined) {
     console.log(HELP);
     return command === undefined && values.help !== true ? EXIT.usage : EXIT.ok;
   }
 
+  // 每个子命令自行校验必填参数，并返回约定的退出码。
   switch (command) {
     case 'init':
       return initCommand(parseDir(positionals, '.') as string);
@@ -145,6 +154,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
 }
 
+// 仅在作为可执行脚本运行时启动；被测试 import 时不自动执行。
 const entry = process.argv[1];
 const isMain = entry !== undefined && import.meta.url === pathToFileURL(entry).href;
 if (isMain) {
