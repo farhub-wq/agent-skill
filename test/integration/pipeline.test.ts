@@ -1,3 +1,7 @@
+/**
+ * 端到端集成测试：准入 → 注册 → 执行器/过滤链 → 沙箱 → 生命周期 → 评测 → 台账。
+ * 验证各模块拼起来后的真实行为，不依赖 mock 宿主。
+ */
 import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -28,8 +32,10 @@ import { TRACE_EVENT_TYPES } from '../../src/trace/events.js';
 import { createTracer } from '../../src/trace/tracer.js';
 import { exampleDir, fixtureDir, registeredSkill, toolCall } from '../helpers.js';
 
+// 所有临时目录统一登记，afterAll 时一次性清理。
 const tempDirs: string[] = [];
 
+/** 创建临时目录并纳入清理列表。 */
 async function tempDir(prefix: string): Promise<string> {
   const dir = await mkdtemp(path.join(os.tmpdir(), prefix));
   tempDirs.push(dir);

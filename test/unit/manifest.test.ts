@@ -1,3 +1,6 @@
+/**
+ * 清单单元测试：SKILL.md 解析、skill.yaml 校验、脚本发现与语义检查。
+ */
 import { describe, expect, it } from 'vitest';
 import {
   allowedToolsOf,
@@ -10,6 +13,7 @@ import {
 import { assertValidManifest, validateManifest } from '../../src/manifest/validate.js';
 import { exampleDir, makeManifest } from '../helpers.js';
 
+/** 一份合法 SKILL.md，含额外 frontmatter 字段与带参数的 allowed-tools。 */
 const VALID_SKILL = `---
 name: demo-skill
 description: Use when testing the parser.

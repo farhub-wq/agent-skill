@@ -1,3 +1,6 @@
+/**
+ * 看守进程单元测试：成功不重启、指数退避、窗口内重启强度上限。
+ */
 import { describe, expect, it } from 'vitest';
 import { createSupervisor, SupervisorError } from '../../src/runtime/supervisor.js';
 import { createTracer } from '../../src/trace/tracer.js';

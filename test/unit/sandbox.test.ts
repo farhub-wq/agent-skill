@@ -1,3 +1,7 @@
+/**
+ * 沙箱单元测试：命令拆解、写入越界、网络外连、子进程封禁、超时与输出上限。
+ * 每个用例在独立临时目录写脚本后真实 spawn。
+ */
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,6 +26,7 @@ interface SandboxRun {
   events: string[];
 }
 
+/** 在临时目录写入脚本并执行，返回结果与事件类型序列。 */
 async function runScript(
   source: string,
   options: { limits?: Partial<SandboxLimits>; env?: Record<string, string> } = {},

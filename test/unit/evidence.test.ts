@@ -1,3 +1,6 @@
+/**
+ * 证据单元测试：目录完整性哈希、稳定序列化、证据写入与锁校验、篡改检测。
+ */
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -16,8 +19,10 @@ import {
 } from '../../src/evidence/lock.js';
 import { exampleDir } from '../helpers.js';
 
+// 临时目录统一登记，测试结束后清理。
 const tempDirs: string[] = [];
 
+/** 创建临时目录并纳入清理列表。 */
 async function tempDir(prefix: string): Promise<string> {
   const dir = await mkdtemp(path.join(os.tmpdir(), prefix));
   tempDirs.push(dir);

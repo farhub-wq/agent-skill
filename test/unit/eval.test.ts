@@ -1,3 +1,6 @@
+/**
+ * 评测单元测试：用例加载、三种评分器、k 次执行、指标与置信区间。
+ */
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';

@@ -1,3 +1,6 @@
+/**
+ * 过滤链单元测试：顺序与回卷、短路、fail-open/fail-closed、各内置过滤器。
+ */
 import { describe, expect, it } from 'vitest';
 import {
   createFilterChain,
@@ -15,6 +18,7 @@ import { makeManifest, toolCall } from '../helpers.js';
 
 const permissions = makeManifest().permissions;
 
+/** 快速构造过滤链与配套 tracer。 */
 function chain(filters: readonly ToolFilter[], runId = 'filter-run') {
   const tracer = createTracer({ runId });
   return { tracer, chain: createFilterChain(filters, { tracer }) };

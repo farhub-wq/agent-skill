@@ -1,3 +1,6 @@
+/**
+ * 生命周期单元测试：状态机合法/非法转换，以及后处理器的顺序与错误包装。
+ */
 import { describe, expect, it } from 'vitest';
 import {
   runPostProcessors,

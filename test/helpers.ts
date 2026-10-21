@@ -1,3 +1,7 @@
+/**
+ * 测试共享工具：仓库路径、清单构造器、注册技能与工具调用默认值。
+ * 所有单元测试都通过这里构造数据，避免各自重复拼装。
+ */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ToolCall } from '../src/filters/chain.js';
@@ -10,10 +14,13 @@ import {
 import { toRegisteredSkill } from '../src/registry/registry.js';
 import type { RegisteredSkill, Scope } from '../src/registry/scope.js';
 
+/** 仓库根目录（由本文件位置向上推一层）。 */
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+/** 示例技能目录，集成测试与 CLI 测试共用。 */
 export const exampleDir = path.join(repoRoot, 'examples', 'invoice-reconcile');
 
+/** 拼接 test/fixtures 下的夹具路径。 */
 export function fixtureDir(...parts: string[]): string {
   return path.join(repoRoot, 'test', 'fixtures', ...parts);
 }
@@ -35,6 +42,7 @@ export interface ManifestOverrides {
   };
 }
 
+/** 构造合法清单，未覆盖字段使用可用的默认值。 */
 export function makeManifest(overrides: ManifestOverrides = {}): SkillManifest {
   const permissions = overrides.permissions;
   return SkillManifestSchema.parse({
@@ -59,6 +67,7 @@ export function makeManifest(overrides: ManifestOverrides = {}): SkillManifest {
   });
 }
 
+/** 在 makeManifest 基础上封装为已注册技能，默认 task 作用域。 */
 export function registeredSkill(
   overrides: ManifestOverrides = {},
   options: { dir?: string; scope?: Scope; sessionId?: string } = {},
@@ -72,6 +81,7 @@ export function registeredSkill(
   );
 }
 
+/** 构造只读工具调用，测试中按需覆盖字段。 */
 export function toolCall(overrides: Partial<ToolCall> = {}): ToolCall {
   return {
     id: 'call-1',

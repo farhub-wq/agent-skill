@@ -1,3 +1,6 @@
+/**
+ * 适配器单元测试：PreToolUse 放行/拒绝、PostToolUse 记录与边界说明。
+ */
 import { describe, expect, it } from 'vitest';
 import {
   ADAPTER_LIMITATION,
@@ -9,6 +12,7 @@ import { createDefaultFilters } from '../../src/filters/index.js';
 import { createTracer } from '../../src/trace/tracer.js';
 import { registeredSkill } from '../helpers.js';
 
+/** 构造带默认过滤链的 Claude 适配器。 */
 function setup() {
   const skill = registeredSkill({
     capabilities: ['fs.read'],

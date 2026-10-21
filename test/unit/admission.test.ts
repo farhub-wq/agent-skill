@@ -1,3 +1,6 @@
+/**
+ * 准入单元测试：示例技能放行、恶意夹具拦截、失败码与 trace 事件。
+ */
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {

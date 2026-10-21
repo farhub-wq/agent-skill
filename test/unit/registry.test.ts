@@ -1,3 +1,7 @@
+/**
+ * 注册表单元测试：幂等注册、同作用域冲突、singleton 唯一性、
+ * 作用域优先级、歧义检测与依赖闭包。
+ */
 import { describe, expect, it } from 'vitest';
 import {
   createRegistry,

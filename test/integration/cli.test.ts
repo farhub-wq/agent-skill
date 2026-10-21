@@ -1,3 +1,7 @@
+/**
+ * CLI 集成测试：直接调用 main()，验证退出码、输出、台账与证据文件。
+ * 通过捕获 console/stdout 避免污染测试输出。
+ */
 import { cp, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -19,11 +23,13 @@ afterAll(async () => {
   await Promise.all(tempDirs.map((dir) => rm(dir, { recursive: true, force: true })));
 });
 
+/** 捕获的输出句柄：text 取全部内容，restore 还原 console/stdout。 */
 interface Capture {
   text: () => string;
   restore: () => void;
 }
 
+/** 拦截 console.log/error 与 process.stdout.write，汇总为一段文本。 */
 function captureOutput(): Capture {
   const chunks: string[] = [];
   const log = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
