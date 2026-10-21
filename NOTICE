@@ -1,0 +1,10 @@
+agent-skill
+Copyright 2026 agent-skill contributors
+
+This product includes software developed at
+the agent-skill project (https://github.com/agent-skill/agent-skill).
+
+Third-party runtime dependencies:
+- yaml (ISC)
+- semver (ISC)
+- zod (MIT)
