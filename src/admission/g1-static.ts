@@ -1,3 +1,7 @@
+/**
+ * G1 静态检查：纯文本与清单分析，不调用模型、不执行技能代码。
+ * 目标是在技能目录被复制或安装之前，拦截文档中列出的四类绕过手段。
+ */
 import path from 'node:path';
 import semver from 'semver';
 import type { SkillSource } from '../manifest/parse.js';
@@ -10,22 +14,26 @@ import {
   hasCapability,
 } from './skill-md.js';
 
+/** 不约束上界的版本范围，只告警不拦截。 */
 const LOOSE_RANGES = new Set(['*', 'x', 'latest', '>=0.0.0', '>=0']);
 
+/** 判断清单中的路径是否逃出技能目录（绝对路径或 ../ 开头）。 */
 export function escapesSkillDir(entry: string): boolean {
   if (path.isAbsolute(entry)) return true;
   const normalized = path.posix.normalize(entry.replace(/\\/g, '/'));
   return normalized === '..' || normalized.startsWith('../');
 }
 
+/** 判断 exec 命令文本是否引用了某个脚本（兼容 ./scripts/x.js 写法）。 */
 function commandCoversScript(command: string, script: string): boolean {
   const normalized = command.replace(/\\/g, '/');
   return normalized.includes(script) || normalized.includes(`./${script}`);
 }
 
 /**
- * G1 is purely static: no model, no execution. It must catch the four
- * documented bypass classes before a skill directory is copied anywhere.
+ * 执行 G1 静态检查。
+ * 覆盖四类绕过：宿主预处理命令、未声明的工具/脚本、路径逃逸、未声明网络出口，
+ * 另外检查依赖范围是否有效或过宽。
  */
 export function runG1(source: SkillSource): Finding[] {
   const findings: Finding[] = [];
@@ -34,6 +42,7 @@ export function runG1(source: SkillSource): Finding[] {
   const manifestPath = `${source.dir}/skill.yaml`;
   const fullText = `${source.skillMd.raw}\n${source.manifestRaw}`;
 
+  // 1) 宿主预处理命令会先于模型执行，必须直接拒绝。
   for (const hit of findPreprocessingCommands(source.skillMd.raw)) {
     findings.push(
       finding('preprocessing-command', `SKILL.md executes a host preprocessing command on line ${hit.line}`, {
@@ -43,6 +52,7 @@ export function runG1(source: SkillSource): Finding[] {
     );
   }
 
+  // 2) frontmatter 声明的工具必须能在 skill.yaml 的 capabilities 中找到。
   for (const family of declaredToolFamilies(source.skillMd.frontmatter)) {
     if (!hasCapability(manifest.capabilities, family)) {
       findings.push(
@@ -54,6 +64,7 @@ export function runG1(source: SkillSource): Finding[] {
     }
   }
 
+  // 3) 随技能附带的每个脚本都必须在 permissions.exec 中登记。
   for (const script of source.scripts) {
     if (!manifest.permissions.exec.some((command) => commandCoversScript(command, script))) {
       findings.push(
@@ -65,6 +76,7 @@ export function runG1(source: SkillSource): Finding[] {
     }
   }
 
+  // 4) SKILL.md 中引用的脚本必须真实存在且已登记。
   for (const reference of findScriptReferences(source.skillMd.body)) {
     if (!source.scripts.includes(reference)) {
       findings.push(
@@ -83,6 +95,7 @@ export function runG1(source: SkillSource): Finding[] {
     }
   }
 
+  // 5) 文件系统权限不得逃出技能目录。
   for (const entry of manifest.permissions.fs) {
     if (escapesSkillDir(entry)) {
       findings.push(
@@ -105,6 +118,7 @@ export function runG1(source: SkillSource): Finding[] {
     }
   }
 
+  // 6) 出现 URL 或有 net 能力时，必须声明 permissions.net 白名单。
   const urls = findUrls(fullText);
   const netDeclared = manifest.permissions.net.length > 0;
   const netCapable = hasCapability(manifest.capabilities, 'net');
@@ -123,6 +137,7 @@ export function runG1(source: SkillSource): Finding[] {
     );
   }
 
+  // 7) 依赖范围必须合法；无上界范围只给 warning。
   for (const [name, range] of Object.entries(manifest.requires)) {
     if (semver.validRange(range) === null) {
       findings.push(

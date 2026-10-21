@@ -1,3 +1,7 @@
+/**
+ * G2 语义检查：基于规则比对 SKILL.md 描述与清单声明，不依赖模型。
+ * 语义判定只能作为辅助，永远不能成为唯一的放行依据。
+ */
 import type { SkillSource } from '../manifest/parse.js';
 import { finding, type Advisory, type Finding } from './findings.js';
 import {
@@ -14,11 +18,13 @@ export interface G2Result {
   advisories: Advisory[];
 }
 
+/** description 的词数上限，过长会稀释触发条件。 */
 const MAX_DESCRIPTION_WORDS = 500;
 
 /**
- * G2 is rule-based on purpose: the plan's P0 ships without a model dependency,
- * and a semantic judge must never be the only decision maker.
+ * 执行 G2 规则检查。
+ * 检查 description 是否只描述触发条件，以及正文是否隐含未声明的写文件、
+ * 执行命令、网络访问或敏感数据使用。
  */
 export function runG2(source: SkillSource): G2Result {
   const findings: Finding[] = [];
@@ -29,6 +35,7 @@ export function runG2(source: SkillSource): G2Result {
   const description = String(source.skillMd.frontmatter['description'] ?? '');
   const body = source.skillMd.body;
 
+  // description 应只写“何时使用”，不写能力介绍；不符合只给建议。
   if (!description.startsWith('Use when')) {
     advisories.push({
       id: 'description-trigger',
@@ -45,6 +52,7 @@ export function runG2(source: SkillSource): G2Result {
     });
   }
 
+  // 正文要求写文件，但清单没有 fs.write 能力：属于未声明工具。
   if (mentionsWrite(body) && !hasCapability(manifest.capabilities, 'fs.write')) {
     findings.push(
       finding('undeclared-tool', 'SKILL.md instructs the model to write files without an fs.write capability', {
@@ -52,6 +60,7 @@ export function runG2(source: SkillSource): G2Result {
       }),
     );
   }
+  // 正文要求执行命令，但清单没有 exec 能力。
   if (mentionsExec(body) && !hasCapability(manifest.capabilities, 'exec')) {
     findings.push(
       finding('undeclared-tool', 'SKILL.md instructs the model to execute commands without an exec capability', {
@@ -59,6 +68,7 @@ export function runG2(source: SkillSource): G2Result {
       }),
     );
   }
+  // 正文出现 URL 却未声明网络白名单。
   if (findUrls(body).length > 0 && manifest.permissions.net.length === 0) {
     findings.push(
       finding('network-egress', 'SKILL.md instructs the model to reach a network endpoint without permissions.net', {
@@ -66,6 +76,7 @@ export function runG2(source: SkillSource): G2Result {
       }),
     );
   }
+  // 正文提及凭据但未声明 secrets 数据类；先告警，后续由 G4 按分级拦截。
   if (mentionsSensitiveData(body) && !manifest.permissions.data.includes('secrets')) {
     advisories.push({
       id: 'sensitive-data-undeclared',
@@ -74,6 +85,7 @@ export function runG2(source: SkillSource): G2Result {
     });
   }
 
+  // 正文引用的脚本必须随技能一起分发。
   for (const reference of findScriptReferences(body)) {
     if (!source.scripts.includes(reference)) {
       findings.push(
@@ -85,6 +97,7 @@ export function runG2(source: SkillSource): G2Result {
     }
   }
 
+  // 声明了 exec 权限却缺少 exec 能力，属于清单内部不一致，提示修正。
   if (manifest.permissions.exec.length > 0 && !hasCapability(manifest.capabilities, 'exec')) {
     advisories.push({
       id: 'exec-capability-missing',
