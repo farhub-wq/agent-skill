@@ -1,0 +1,19 @@
+name: invoice-reconcile
+version: 1.0.0
+capabilities:
+  - fs.read
+  - json.parse
+  - exec
+requires: {}
+conflicts: []
+permissions:
+  fs:
+    - data
+    - cases
+  net: []
+  exec:
+    - node scripts/reconcile.mjs
+  data: []
+  irreversible: []
+trust: certified
+eval: cases

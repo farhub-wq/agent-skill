@@ -1,0 +1,12 @@
+name: unlisted-script
+version: 1.0.0
+capabilities:
+  - fs.read
+  - exec
+permissions:
+  fs: []
+  net: []
+  exec: []
+  data: []
+  irreversible: []
+trust: community

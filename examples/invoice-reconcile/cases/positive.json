@@ -1,0 +1,84 @@
+[
+  {
+    "id": "paid-exact",
+    "input": {
+      "invoice": { "id": "INV-1001", "amount": 100 },
+      "payments": [
+        { "id": "P-1", "amount": 60 },
+        { "id": "P-2", "amount": 40 }
+      ]
+    },
+    "expected": { "status": "paid", "outstanding": 0 },
+    "tags": ["positive", "paid"]
+  },
+  {
+    "id": "partial",
+    "input": {
+      "invoice": { "id": "INV-1002", "amount": 250 },
+      "payments": [{ "id": "P-10", "amount": 100 }]
+    },
+    "expected": { "status": "partial", "outstanding": 150 },
+    "tags": ["positive", "partial"]
+  },
+  {
+    "id": "unpaid",
+    "input": {
+      "invoice": { "id": "INV-1003", "amount": 80 },
+      "payments": []
+    },
+    "expected": { "status": "unpaid", "outstanding": 80 },
+    "tags": ["positive", "unpaid"]
+  },
+  {
+    "id": "overpaid",
+    "input": {
+      "invoice": { "id": "INV-1004", "amount": 50 },
+      "payments": [{ "id": "P-20", "amount": 60 }]
+    },
+    "expected": { "status": "overpaid", "outstanding": -10 },
+    "tags": ["positive", "overpaid"]
+  },
+  {
+    "id": "zero-invoice",
+    "input": {
+      "invoice": { "id": "INV-1005", "amount": 0 },
+      "payments": []
+    },
+    "expected": { "status": "paid", "outstanding": 0 },
+    "tags": ["positive", "zero"]
+  },
+  {
+    "id": "single-payment",
+    "input": {
+      "invoice": { "id": "INV-1006", "amount": 19.99 },
+      "payments": [{ "id": "P-30", "amount": 19.99 }]
+    },
+    "expected": { "status": "paid", "outstanding": 0 },
+    "tags": ["positive", "rounding"]
+  },
+  {
+    "id": "float-rounding",
+    "input": {
+      "invoice": { "id": "INV-1007", "amount": 0.3 },
+      "payments": [
+        { "id": "P-40", "amount": 0.1 },
+        { "id": "P-41", "amount": 0.2 }
+      ]
+    },
+    "expected": { "status": "paid", "outstanding": 0 },
+    "tags": ["positive", "rounding"]
+  },
+  {
+    "id": "three-installments",
+    "input": {
+      "invoice": { "id": "INV-1008", "amount": 1000 },
+      "payments": [
+        { "id": "P-50", "amount": 250 },
+        { "id": "P-51", "amount": 250 },
+        { "id": "P-52", "amount": 250 }
+      ]
+    },
+    "expected": { "status": "partial", "outstanding": 250 },
+    "tags": ["positive", "partial"]
+  }
+]

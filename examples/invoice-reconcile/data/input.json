@@ -1,0 +1,16 @@
+{
+  "invoice": {
+    "id": "INV-1001",
+    "amount": 100
+  },
+  "payments": [
+    {
+      "id": "P-1",
+      "amount": 60
+    },
+    {
+      "id": "P-2",
+      "amount": 40
+    }
+  ]
+}

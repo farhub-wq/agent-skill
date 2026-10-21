@@ -1,0 +1,11 @@
+name: undeclared-tool
+version: 1.0.0
+capabilities:
+  - fs.read
+permissions:
+  fs: []
+  net: []
+  exec: []
+  data: []
+  irreversible: []
+trust: community

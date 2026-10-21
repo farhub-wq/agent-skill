@@ -1,0 +1,13 @@
+name: community-exec
+version: 1.0.0
+capabilities:
+  - fs.read
+  - exec
+permissions:
+  fs: []
+  net: []
+  exec:
+    - node scripts/task.mjs
+  data: []
+  irreversible: []
+trust: community

@@ -1,0 +1,45 @@
+[
+  {
+    "id": "missing-invoice-id",
+    "input": {
+      "invoice": { "amount": 10 },
+      "payments": []
+    },
+    "expected": { "error": "invalid-invoice-id" },
+    "tags": ["negative", "validation"],
+    "negative": true
+  },
+  {
+    "id": "negative-amount",
+    "input": {
+      "invoice": { "id": "INV-2002", "amount": -5 },
+      "payments": []
+    },
+    "expected": { "error": "invalid-amount" },
+    "tags": ["negative", "validation"],
+    "negative": true
+  },
+  {
+    "id": "non-numeric-payment",
+    "input": {
+      "invoice": { "id": "INV-2003", "amount": 20 },
+      "payments": [{ "id": "P-60", "amount": "20" }]
+    },
+    "expected": { "error": "invalid-payment" },
+    "tags": ["negative", "validation"],
+    "negative": true
+  },
+  {
+    "id": "duplicate-payment",
+    "input": {
+      "invoice": { "id": "INV-2004", "amount": 30 },
+      "payments": [
+        { "id": "P-70", "amount": 10 },
+        { "id": "P-70", "amount": 20 }
+      ]
+    },
+    "expected": { "error": "duplicate-payment" },
+    "tags": ["negative", "validation"],
+    "negative": true
+  }
+]

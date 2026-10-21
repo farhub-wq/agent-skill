@@ -1,0 +1,12 @@
+name: path-escape
+version: 1.0.0
+capabilities:
+  - fs.read
+permissions:
+  fs:
+    - ../shared
+  net: []
+  exec: []
+  data: []
+  irreversible: []
+trust: community
