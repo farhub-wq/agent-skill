@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: ['22.23.2']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      - run: npm run build
+
+      - run: npm test
+
+      - name: CLI smoke - example skill passes install gate
+        run: node dist/cli/index.js verify examples/invoice-reconcile --gate install
+
+      - name: CLI smoke - malicious fixture is rejected with exit code 2
+        shell: bash
+        run: |
+          set +e
+          node dist/cli/index.js verify test/fixtures/malicious/preprocessing-command --gate install
+          code=$?
+          set -e
+          if [ "$code" -ne 2 ]; then
+            echo "expected exit code 2, got $code"
+            exit 1
+          fi
+
+      - name: CLI smoke - standalone run of the example skill
+        run: node dist/cli/index.js run examples/invoice-reconcile --input examples/invoice-reconcile/data/input.json
